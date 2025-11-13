@@ -4,12 +4,14 @@ from typing import Optional, List, Dict, Any
 import base64
 import logging
 
+# Update the imports section:
 from ..agents.orchestrator import OrchestratorAgent
+from ..agents.content_orchestrator import ContentOrchestrator  # Add this line
 from ..storage.distributed_storage import DistributedStorage
 from ..storage.content_manager import ContentManager
 from ..utils.validation import InputValidator, ContentSanitizer
-from ..models.tone_models import AdvancedToneAnalyzer
-from .middleware import LoggingMiddleware, RateLimitingMiddleware, SecurityHeadersMiddleware
+from ..models.tone_analyzer import AdvancedToneAnalyzer  # Fixed import path
+from middleware import LoggingMiddleware, RateLimitingMiddleware, SecurityHeadersMiddleware
 
 app = FastAPI(
     title="Intelligent Content Generation Framework",

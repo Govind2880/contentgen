@@ -23,13 +23,18 @@ class HuggingFaceModelRegistry:
         "deberta-mnli": "microsoft/deberta-large-mnli"
     }
     
+    OBJECT_DETECTION_MODELS = {
+        "detr": "facebook/detr-resnet-50"
+    }
+    
     @classmethod
     def get_model(cls, model_type: str, model_name: str) -> str:
         """Get model identifier by type and name"""
         model_map = {
             "text_generation": cls.TEXT_GENERATION_MODELS,
             "image_captioning": cls.IMAGE_CAPTIONING_MODELS,
-            "zero_shot": cls.ZERO_SHOT_MODELS
+            "zero_shot": cls.ZERO_SHOT_MODELS,
+            "object_detection": cls.OBJECT_DETECTION_MODELS
         }
         
         if model_type in model_map and model_name in model_map[model_type]:

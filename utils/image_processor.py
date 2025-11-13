@@ -11,12 +11,10 @@ class AdvancedImageProcessor:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.headers = {"Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_KEY')}"}
-        self.current_model = HuggingFaceModelRegistry.IMAGE_CAPTIONING_MODELS["vit-gpt2"]
+        self.current_model = HuggingFaceModelRegistry.get_model("image_captioning", "vit-gpt2")
     
     async def extract_keywords(self, image_data: str) -> str:
-        """
-        Extract comprehensive description from image using multiple strategies
-        """
+        """Extract comprehensive description from image"""
         try:
             # Primary caption generation
             primary_caption = await self._generate_primary_caption(image_data)
@@ -52,8 +50,8 @@ class AdvancedImageProcessor:
     async def _enhance_with_object_detection(self, image_data: str, base_caption: str) -> str:
         """Enhance caption with object detection context"""
         try:
-            # Use object detection model to identify key elements
-            object_detection_url = "https://api-inference.huggingface.co/models/facebook/detr-resnet-50"
+            model_name = HuggingFaceModelRegistry.get_model("object_detection", "detr")
+            object_detection_url = f"https://api-inference.huggingface.co/models/{model_name}"
             
             if image_data.startswith('http'):
                 payload = {"inputs": image_data}
@@ -80,9 +78,11 @@ class AdvancedImageProcessor:
             self.logger.warning(f"Object detection enhancement failed: {e}")
             return base_caption
     
-    def switch_model(self, model_name: str):
+    def switch_model(self, model_name: str) -> bool:
         """Switch to different image processing model"""
-        if model_name in HuggingFaceModelRegistry.IMAGE_CAPTIONING_MODELS:
-            self.current_model = HuggingFaceModelRegistry.IMAGE_CAPTIONING_MODELS[model_name]
+        try:
+            self.current_model = HuggingFaceModelRegistry.get_model("image_captioning", model_name)
             return True
-        return False
+        except ValueError:
+            self.logger.error(f"Image model {model_name} not found")
+            return False

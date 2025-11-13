@@ -2,22 +2,49 @@ import requests
 import os
 import logging
 from typing import Dict, List, Any
-from config.huggingface_config import HuggingFaceModelRegistry
+from ..config.huggingface_config import HuggingFaceModelRegistry
 
-class AdvancedToneAnalyzer:
-    """Enhanced tone analyzer with multiple classification strategies"""
+class ToneAnalyzer:
+    """Basic tone analyzer"""
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.available_tones = [
-            "professional", "casual", "academic", "creative", 
-            "persuasive", "formal", "humorous", "technical"
-        ]
+        self.available_tones = ["professional", "casual", "academic", "creative", "persuasive"]
+    
+    async def analyze_tone(self, text: str) -> str:
+        """Analyze input text to determine appropriate tone"""
+        try:
+            model_name = HuggingFaceModelRegistry.get_model("zero_shot", "bart-mnli")
+            API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
+            headers = {"Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_KEY')}"}
+            
+            payload = {
+                "inputs": text,
+                "parameters": {
+                    "candidate_labels": self.available_tones,
+                    "multi_label": False
+                }
+            }
+            
+            response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+            response.raise_for_status()
+            
+            result = response.json()
+            return result['labels'][0]
+            
+        except Exception as e:
+            self.logger.warning(f"Tone analysis failed: {e}, using default tone")
+            return "professional"
+
+class AdvancedToneAnalyzer(ToneAnalyzer):
+    """Enhanced tone analyzer with multiple classification strategies"""
+    
+    def __init__(self):
+        super().__init__()
+        self.available_tones.extend(["formal", "humorous", "technical"])
         
     async def analyze_tone_multi_model(self, text: str) -> Dict[str, Any]:
-        """
-        Analyze tone using multiple models for consensus
-        """
+        """Analyze tone using multiple models for consensus"""
         try:
             # Primary analysis with BART-MNLI
             primary_tone = await self._analyze_with_bart(text)
@@ -43,7 +70,8 @@ class AdvancedToneAnalyzer:
     
     async def _analyze_with_bart(self, text: str) -> str:
         """Analyze tone using BART model"""
-        API_URL = f"https://api-inference.huggingface.co/models/{HuggingFaceModelRegistry.ZERO_SHOT_MODELS['bart-mnli']}"
+        model_name = HuggingFaceModelRegistry.get_model("zero_shot", "bart-mnli")
+        API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
         headers = {"Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_KEY')}"}
         
         payload = {
@@ -63,7 +91,8 @@ class AdvancedToneAnalyzer:
     async def _get_tone_confidence_scores(self, text: str) -> Dict[str, float]:
         """Get confidence scores for all available tones"""
         try:
-            API_URL = f"https://api-inference.huggingface.co/models/{HuggingFaceModelRegistry.ZERO_SHOT_MODELS['bart-mnli']}"
+            model_name = HuggingFaceModelRegistry.get_model("zero_shot", "bart-mnli")
+            API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
             headers = {"Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_KEY')}"}
             
             payload = {

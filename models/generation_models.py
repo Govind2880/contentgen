@@ -1,7 +1,7 @@
 import requests
 import os
 from typing import List, Dict, Any
-from ..config.huggingface_config import HuggingFaceConfig
+from config.huggingface_config import HuggingFaceConfig
 
 class HuggingFaceModelManager:
     def __init__(self, config: HuggingFaceConfig):
